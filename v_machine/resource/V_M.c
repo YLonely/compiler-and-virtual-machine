@@ -4,7 +4,7 @@
 #include "commands.h"
 #include "string.h"
 
-#define EXTRA_SIZE 10 
+#define EXTRA_SIZE 50
 
 
 static int theLinesOfFile(FILE *fp)     //how many lines there in target file
@@ -195,7 +195,7 @@ void vmRun(struct state *vm_state)
 			}
 			printf("\nvm stoped in normal situation\n");
 			getchar();
-			exit(-1);
+			exit(0);
 			break;
 		}
 		case add:
@@ -295,7 +295,7 @@ void vmRun(struct state *vm_state)
 				*(Stack++) = 0;
 			break;
 		}
-		case gt_eq: 
+		case gt_eq:
 		{
 			if (Stack == vm_state->Stack || Stack == vm_state->Stack + 1)
 			{
@@ -428,7 +428,7 @@ void vmRun(struct state *vm_state)
 			//extend the space automatically when the stack is full
 			if ((Stack - vm_state->Stack) == vm_state->Stack_size - 1)
 			{
-				if ((vm_state->Stack = (int *)realloc(vm_state->Stack, vm_state->Stack_size + EXTRA_SIZE)) == NULL)
+				if ((vm_state->Stack = (int *)realloc(vm_state->Stack, (vm_state->Stack_size + EXTRA_SIZE)*sizeof(int))) == NULL)
 				{
 					printf("realloc stack failed\n");
 					getchar();
@@ -450,9 +450,9 @@ void vmRun(struct state *vm_state)
 					getchar();
 					exit(0);
 				}
-				if (arg2 == vm_state->Arg_size - 1)
+				if (currentArgPosition >= vm_state->Arg_size - 1)
 				{
-					if ((vm_state->Arg = (int *)realloc(vm_state->Arg, vm_state->Arg_size + EXTRA_SIZE)) == NULL)
+					if ((vm_state->Arg = (int *)realloc(vm_state->Arg, (vm_state->Arg_size + EXTRA_SIZE)*sizeof(int))) == NULL)
 					{
 						printf("realloc arg failed\n");
 						getchar();
@@ -467,7 +467,10 @@ void vmRun(struct state *vm_state)
 					changeArgBase = false;
 				}
 				*(Arg + arg2 + argBaseNum) = *(--Stack);
-				currentArgPosition++;
+				if (arg2 >= currentArgPosition)
+				{
+					currentArgPosition++;
+				}
 			}
 			else if (!strcmp(arguement1, "local"))
 			{
@@ -477,9 +480,14 @@ void vmRun(struct state *vm_state)
 					getchar();
 					exit(0);
 				}
-				if (arg2 == vm_state->Local_size - 1)
+				*(Local + arg2 + localBaseNum) = *(--Stack);
+				if (arg2 >= currentLocalPosition)
 				{
-					if ((vm_state->Local = (int *)realloc(vm_state->Local, vm_state->Local_size + EXTRA_SIZE)) == NULL)
+					currentLocalPosition++;
+				}
+				if (currentLocalPosition >= vm_state->Local_size - 1)
+				{
+					if ((vm_state->Local = (int *)realloc(vm_state->Local, (vm_state->Local_size + EXTRA_SIZE)*sizeof(int))) == NULL)
 					{
 						printf("realloc local failed\n");
 						getchar();
@@ -487,8 +495,6 @@ void vmRun(struct state *vm_state)
 					}
 					vm_state->Local_size = vm_state->Local_size + EXTRA_SIZE;
 				}
-				*(Local + arg2 + localBaseNum) = *(--Stack);
-				currentLocalPosition++;
 			}
 			else if (!strcmp(arguement1, "static"))
 			{
@@ -500,7 +506,7 @@ void vmRun(struct state *vm_state)
 				}
 				if (arg2 == vm_state->Static_size - 1)
 				{
-					if ((vm_state->Static = (int *)realloc(vm_state->Static, vm_state->Static_size + EXTRA_SIZE)) == NULL)
+					if ((vm_state->Static = (int *)realloc(vm_state->Static, (vm_state->Static_size + EXTRA_SIZE)*sizeof(int))) == NULL)
 					{
 						printf("realloc static failed\n");
 						getchar();
@@ -527,9 +533,9 @@ void vmRun(struct state *vm_state)
 			// initial a empty space for array
 			else if (!strcmp(arguement1, "heaparr"))
 			{
-				if (Heap + 1 - vm_state->Heap_size == vm_state->Heap_size - 1)
+				if (Heap - vm_state->Heap == vm_state->Heap_size - 2)
 				{
-					if ((vm_state->Heap = (int *)realloc(vm_state->Heap, vm_state->Heap_size + EXTRA_SIZE)) == NULL)
+					if ((vm_state->Heap = (int *)realloc(vm_state->Heap, (vm_state->Heap_size + EXTRA_SIZE)*sizeof(int))) == NULL)
 					{
 						printf("realloc heap failed\n");
 						getchar();
