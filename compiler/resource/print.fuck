@@ -1,0 +1,43 @@
+function print
+push arg 0
+pop local 0
+push arg 1
+pop local 1
+push local 1
+push constant 115
+uneq
+ifgoto I1
+push local 0
+pop pointer
+push local 0
+pop local 1
+label W1
+push heap 0
+push constant 0
+eq
+ifgoto W2
+push heap 0
+printchar
+push local 1
+push constant 1
+add
+pop pointer
+push local 1
+push constant 1
+add
+pop local 1
+goto W1
+label W2
+back
+label I1
+push local 1
+push constant 99
+uneq
+ifgoto I2
+push local 0
+printchar
+back
+label I2
+push local 0
+printnum
+back
