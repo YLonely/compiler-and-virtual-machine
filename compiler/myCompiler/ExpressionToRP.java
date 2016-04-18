@@ -135,21 +135,21 @@ public class ExpressionToRP
 							{
 								if (s2.equals(","))
 								{
-									expreStack.push(token + "#" + s1 + "_");
+									expreStack.push(token + "_functionPara_" + s1 + "_End_");
 									index++;
 									s1 = tokenList.get(index++);
 									s2 = tokenList.get(index);
 								} else
 								{
-									expreStack.push(token + "#" + s1);
+									expreStack.push(token + "_functionPara_" + s1);
 									s1 = tokenList.get(index++);
 									s2 = tokenList.get(index);
 								}
 							}
-							expreStack.push(token + "#" + s1 + "_");
+							expreStack.push(token + "_functionPara_" + s1 + "_End_");
 						} else
 							index++;
-						expreStack.push(token + "#");
+						expreStack.push(token + "_functionName_");
 					}
 					index++;
 				} /*

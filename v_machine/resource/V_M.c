@@ -467,7 +467,7 @@ void vmRun(struct state *vm_state)
 					changeArgBase = false;
 				}
 				*(Arg + arg2 + argBaseNum) = *(--Stack);
-				if (arg2 >= currentArgPosition)
+				if (arg2 + argBaseNum >= currentArgPosition)
 				{
 					currentArgPosition++;
 				}
@@ -481,7 +481,7 @@ void vmRun(struct state *vm_state)
 					exit(0);
 				}
 				*(Local + arg2 + localBaseNum) = *(--Stack);
-				if (arg2 >= currentLocalPosition)
+				if (arg2 + localBaseNum >= currentLocalPosition)
 				{
 					currentLocalPosition++;
 				}

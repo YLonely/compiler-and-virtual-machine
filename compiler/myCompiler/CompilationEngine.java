@@ -98,12 +98,19 @@ public class CompilationEngine
 			try
 			{
 				compileExpression();
-				writer.write("endstatic");
 			} catch (Exception e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		try
+		{
+			writer.write("endstatic");
+		} catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -568,23 +575,23 @@ public class CompilationEngine
 		int arguementIndex = 0;
 		while ((symbol = expressionStack.get()) != null)
 		{
-			if (symbol.endsWith("#"))
+			if (symbol.endsWith("_functionName_"))
 			{
-				symbol = symbol.replace("#", "");
+				symbol = symbol.replace("_functionName_", "");
 				if (!symbol.equals("printchar") && !symbol.equals("printnum"))
 				{
 					writer.write("call", symbol);
 					arguementIndex = 0;
 				}
-			} else if (symbol.matches(".{1,}#.{1,}_?"))
+			} else if (symbol.matches(".{1,}_functionPara_.{1,}(_End_)?"))
 			{
-				String[] a = symbol.split("#");
-				if (!a[1].endsWith("_"))
+				String[] a = symbol.split("_functionPara_");
+				if (!a[1].endsWith("_End_"))
 				{
 					functionList.add(a[1]);
 				} else
 				{
-					a[1] = a[1].replace("_", "");
+					a[1] = a[1].replace("_End_", "");
 					functionList.add(a[1]);
 					functionList.add(";");
 					compileExpressionAfterEquality(table, functionList);
@@ -628,27 +635,43 @@ public class CompilationEngine
 				writer.write("push", "constant", String.valueOf(symbolASCII));
 			} else if (symbol.matches("\"[^\"]{0,}\""))
 			{
+				String index1 = String.valueOf(labelIndex++);
+				String index2 = String.valueOf(labelIndex++);
 				int j = 0;
 				symbol = symbol.replace("\"", "");
 				char[] a = symbol.toCharArray();
 				writer.write("push", "heappos");
 				writer.write("push", "heappos");
 				writer.write("pop", "pointer");
-				for (int i = 0; i <= a.length; i++)
-				{
-					writer.write("pop", "heaparr");
-				}
-				for (int i = 0; i < a.length; i++, j++)
+				table.putLocal("times_");
+				writer.write("push", "constant", String.valueOf(a.length));
+				writer.write("pop", table.getLocalValue("times_"));
+				writer.write("label", "L" + index1);
+				writer.write("push", table.getLocalValue("times_"));
+				writer.write("push", "constant", "0");
+				writer.write("lt");
+				writer.write("ifgoto", "L" + index2);
+				writer.write("pop", "heaparr");
+				writer.write("push", table.getLocalValue("times_"));
+				writer.write("push", "constant", "1");
+				writer.write("sub");
+				writer.write("pop", table.getLocalValue("times_"));
+				writer.write("goto", "L" + index1);
+				writer.write("label", "L" + index2);
+				table.deleteLocal("times_");
+				for (int i = 0; i < a.length; j++)
 				{
 					if (a[i] == '\\' && a[i + 1] == 'n')
 					{
 						writer.write("push", "constant", "10");
-						writer.write("pop", "heap", String.valueOf(i));
+						writer.write("pop", "heap", String.valueOf(j));
+						i++;
 						i++;
 						continue;
 					}
 					writer.write("push", "constant", String.valueOf((int) a[i]));
 					writer.write("pop", "heap", String.valueOf(j));
+					i++;
 				}
 				writer.write("push", "constant", "0");
 				writer.write("pop", "heap", String.valueOf(j));
@@ -704,8 +727,7 @@ public class CompilationEngine
 	}
 
 	/**
-	 * analyse the expressions after equlity sign,including array
-	 * and varies
+	 * analyse the expressions after equlity sign,including array and varies
 	 * 
 	 * @throws Exception
 	 */
@@ -753,19 +775,42 @@ public class CompilationEngine
 				writer.write("push", "constant", String.valueOf(symbolASCII));
 			} else if (symbol.matches("\"[^\"]{0,}\""))
 			{
+				String index1 = String.valueOf(labelIndex++);
+				String index2 = String.valueOf(labelIndex++);
 				symbol = symbol.replace("\"", "");
+				int j = 0;
 				char[] a = symbol.toCharArray();
 				writer.write("push", "heappos");
 				writer.write("push", "heappos");
 				writer.write("pop", "pointer");
-				for (int i = 0; i <= a.length; i++)
+				SymbolTable.putStatic("times_");
+				writer.write("push", "constant", String.valueOf(a.length));
+				writer.write("pop", SymbolTable.getStaticValue("times_"));
+				writer.write("label", "L" + index1);
+				writer.write("push", SymbolTable.getStaticValue("times_"));
+				writer.write("push", "constant", "0");
+				writer.write("lt");
+				writer.write("ifgoto", "L" + index2);
+				writer.write("pop", "heaparr");
+				writer.write("push", SymbolTable.getStaticValue("times_"));
+				writer.write("push", "constant", "1");
+				writer.write("sub");
+				writer.write("pop", SymbolTable.getStaticValue("times_"));
+				writer.write("goto", "L" + index1);
+				writer.write("label", "L" + index2);
+				for (int i = 0; i < a.length; j++)
 				{
-					writer.write("pop", "heaparr");
-				}
-				for (int i = 0; i < a.length; i++)
-				{
+					if (a[i] == '\\' && a[i + 1] == 'n')
+					{
+						writer.write("push", "constant", "10");
+						writer.write("pop", "heap", String.valueOf(j));
+						i++;
+						i++;
+						continue;
+					}
 					writer.write("push", "constant", String.valueOf((int) a[i]));
-					writer.write("pop", "heap", String.valueOf(i));
+					writer.write("pop", "heap", String.valueOf(j));
+					i++;
 				}
 				writer.write("push", "constant", "0");
 				writer.write("pop", "heap", String.valueOf(a.length));
@@ -839,8 +884,8 @@ public class CompilationEngine
 	}
 
 	/**
-	 * analyse a new form of for-statement.
-	 * from (a) to (b) by (c)
+	 * analyse a new form of for-statement. from (a) to (b) by (c)
+	 * 
 	 * @param table
 	 */
 	private void compileFrom(SymbolTable table)
