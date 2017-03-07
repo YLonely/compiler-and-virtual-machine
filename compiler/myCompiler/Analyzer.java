@@ -42,10 +42,10 @@ public class Analyzer
 		CompilationEngine engine = new CompilationEngine(outPath, tokenizer);
 		engine.analyse();
 		
-		FileImporter importer = new FileImporter("resource/print.fuck", outPath);
+		FileImporter importer = new FileImporter("resource/print.data", outPath);
 		importer.fileImport();
 		
-		LabelSwitcher switcher = new LabelSwitcher(outPath, fileParentPath + "\\" + fileName + ".fuck");
+		LabelSwitcher switcher = new LabelSwitcher(outPath, fileParentPath + "\\" + fileName + ".data");
 		switcher.labelSwitch();
 		
 		System.out.println("Finish!");
